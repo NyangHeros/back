@@ -7,6 +7,8 @@
 # needed library : tensorflow(version=2.6.2), numpy, matplotlib, sklearn, cv2, tqdm, os
 
 # load model
+import numpy as np
+import requests
 import tensorflow as tf
 from tensorflow.keras.models import load_model
 
@@ -62,10 +64,11 @@ class CatSnn:
             DIR = dataset_dir + label
             for img in tqdm(os.listdir(DIR)):
                 path = os.path.join(DIR,img)
-                # reading images
                 img = cv2.imread(path,cv2.IMREAD_COLOR)
-                # resizing images to (150, 150, 3), 3 is the number of channels - RGB
-                img = cv2.resize(img, (self.IMG_SIZE,self.IMG_SIZE))
+                try:
+                    img = cv2.resize(img, (self.IMG_SIZE,self.IMG_SIZE))
+                except Exception as e:
+                    print('asd2'+str(e))
             
                 self.X.append(np.array(img))
                 self.Z.append(str(label))
@@ -142,14 +145,21 @@ class CatSnn:
 
 
  #---------------------------------predict functions--------------------------------------
-    def preprocessImage(self, image_path):
-        img = cv2.imread(image_path)
-        img = cv2.resize(img, (self.IMG_SIZE,self.IMG_SIZE))
-        img = img/255.
-        img = img.reshape(1, 150, 150, 3)
+    def preprocessImage(self, image_path: str):
+        if('http' in image_path):
+            image_nparray = np.asarray(bytearray(requests.get(image_path).content), dtype=np.uint8)
+            img = cv2.imdecode(image_nparray, cv2.IMREAD_COLOR)
+        else:
+            img = cv2.imread(image_path)
+        try:
+            img = cv2.resize(img, (self.IMG_SIZE,self.IMG_SIZE))
+            img = img/255.
+            img = img.reshape(1, 150, 150, 3)
+        except Exception as e:
+            print('asd'+str(e))
         return img
 
-    def predict(self, image_path="../test_img/0006_022.JPG", selection = [6, 7, 15, 18, 19, 29, 55, 57, 82, 152], archer_dir="../archer_img/", dist_threshold=0.4):
+    def predict(self, image_path, selection = [6, 7, 15, 18, 19, 29, 55, 57, 82, 152], archer_dir="../archer_img/", dist_threshold=0.4):
         self.makeAnchor(selection, archer_dir)
 
         self.dists = []
@@ -162,7 +172,7 @@ class CatSnn:
         self.dists = np.array(self.dists)
         return self.dists
  
-    def predictId(self, image_path="../test_img/0006_022.JPG", selection = [6, 7, 15, 18, 19, 29, 55, 57, 82, 152], archer_dir="../archer_img/", dist_threshold=0.4):
+    def predictId(self, image_path, selection = [6, 7, 15, 18, 19, 29, 55, 57, 82, 152], archer_dir="../archer_img/", dist_threshold=0.4):
         self.predict(image_path, selection, archer_dir, dist_threshold)
         if np.sum(self.dists <= dist_threshold) >= 1:
             idx = np.argmin(self.dists)

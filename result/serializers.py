@@ -1,4 +1,4 @@
-from result.models import Results
+from result.models import Photos, Results
 from rest_framework import serializers
 
 
@@ -7,4 +7,12 @@ class ResultsSerializer(serializers.ModelSerializer):
         model = Results
         fields = [
             "name","image"
+        ]
+
+
+
+class PhotosSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Photos
+        fields = ["image"
         ]

@@ -6,6 +6,9 @@
 
 # 1. import CatSnn
 from .module.cat_indivisual_snn_test import CatSnn
+import os
+
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 def cat_snn(img_path):
 
